@@ -1,5 +1,5 @@
 [package]
-name = "aoc-rust-template"
+name = "AOC2023"
 version = "1.0.0"
 edition = "2021"
 rust-version = "1.70"

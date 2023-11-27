@@ -1,4 +1,4 @@
-# AOC Rust Template
+# AOC 2023
 
 Advent of Code is an event run by Eric Wastl. For each day leading up to Christmas, programmers are tasked with solving two small problems each day.
 [Find more information here.](https://adventofcode.com/about)
@@ -9,7 +9,7 @@ You can run this project by calling
 
 ```bash
 cargo build
-./target/debug/aoc-rust-template.exe -d [day number]  -i [input file path]
+./target/debug/AOC2023.exe -d [day number]  -i [input file path]
 ```
 
 or
