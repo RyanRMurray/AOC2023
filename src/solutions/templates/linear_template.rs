@@ -12,7 +12,6 @@ impl SolutionLinear<Vec<usize>, usize, usize> for ExampleSolutionLinear {
         Ok(input
             .replace(['[', ']'], "")
             .split(',')
-            .into_iter()
             .map(|num| num.parse().unwrap())
             .collect())
     }

@@ -15,7 +15,6 @@ impl SolutionSimultaneous<Vec<usize>, usize, usize> for ExampleSolutionSimultane
         Ok(input
             .replace(['[', ']'], "")
             .split(',')
-            .into_iter()
             .map(|num| num.parse().unwrap())
             .collect())
     }
