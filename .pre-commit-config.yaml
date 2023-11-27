@@ -1,0 +1,20 @@
+repos:
+-   repo: local
+    hooks:
+    -   id: fmt
+        name: check format
+        language: system
+        files: '\.rs$'
+        entry: cargo fmt -- --check --verbose
+    -   id: clippy
+        name: clippy
+        language: system
+        files: '\.rs$'
+        entry: cargo clippy -- -D warnings
+        pass_filenames: false
+    -   id: test
+        name: test
+        language: system
+        files: '\.rs$'
+        entry: cargo test
+        pass_filenames: false
