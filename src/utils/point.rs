@@ -5,7 +5,7 @@ use std::{
 
 use itertools::Itertools;
 
-#[derive(Hash, PartialEq, Eq, PartialOrd, Debug, Clone, Copy)]
+#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
 pub struct Pt<const DIMS: usize>(pub [isize; DIMS]);
 
 impl<const DIMS: usize> Default for Pt<DIMS> {
