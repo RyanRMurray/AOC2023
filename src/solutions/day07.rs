@@ -75,6 +75,19 @@ fn to_ranks(hand: &[char; 5], ranks: &[char; 13]) -> [usize; 5] {
         .unwrap()
 }
 
+fn do_thing(hands: Vec<Hand>, hand_comp: fn(&[char; 5]) -> usize, rank_comp: &[char; 13]) -> usize {
+    hands
+        .iter()
+        .map(|(hand, bid)| {
+            // create a comparator index of hand type - [array of card ranks]
+            ((hand_comp(hand), to_ranks(hand, rank_comp)), hand, bid)
+        })
+        .sorted_by(|(a, _, _), (b, _, _)| b.cmp(a)) // use that comparator (note this is a reverse order comparison)
+        .zip(1..)
+        .map(|((_, _, bid), i)| i * bid)
+        .sum()
+}
+
 impl SolutionLinear<Vec<Hand>, usize, usize> for Day07Solution {
     fn load(input: &str) -> Result<Vec<Hand>> {
         Ok(input
@@ -90,36 +103,13 @@ impl SolutionLinear<Vec<Hand>, usize, usize> for Day07Solution {
     }
 
     fn part1(input: &mut Vec<Hand>) -> Result<usize> {
-        Ok(input
-            .iter()
-            .map(|(hand, bid)| {
-                // create a comparator index of hand type - [array of card ranks]
-                ((hand_type(hand), to_ranks(hand, &RANKS)), hand, bid)
-            })
-            .sorted_by(|(a, _, _), (b, _, _)| b.cmp(a)) // use that comparator (note this is a reverse order comparison)
-            .zip(1..)
-            .map(|((_, _, bid), i)| i * bid)
-            .sum())
+        Ok(do_thing(input.to_vec(), hand_type, &RANKS))
     }
 
     fn part2(input: &mut Vec<Hand>, _part_1_solution: usize) -> Result<usize> {
         // do the same as part 1, but every time we get a card with a joker, brute force every type of hand it could be and pick the best
-        Ok(input
-            .iter()
-            .map(|(hand, bid)| {
-                (
-                    (
-                        joker_hand_type(hand),
-                        to_ranks(hand, &JOKER_RANKS), // also make sure 'J' is the lowest card rank
-                    ),
-                    hand,
-                    bid,
-                )
-            })
-            .sorted_by(|(a, _, _), (b, _, _)| b.cmp(a))
-            .zip(1..)
-            .map(|((_, _, bid), i)| i * bid)
-            .sum())
+
+        Ok(do_thing(input.to_vec(), joker_hand_type, &JOKER_RANKS))
     }
 }
 
