@@ -32,12 +32,13 @@ mod tests {
     #[rstest]
     #[ignore = "delete to test solution"]
     #[case("input", 1, 2)]
-    fn validate(#[case] input: &str, #[case] expected_1: usize, #[case] expected_2: usize) {
+    fn validate_day{{ day_value }}(#[case] input: &str, #[case] expected_1: usize, #[case] expected_2: usize) {
         let mut input = Day{{ day_value }}Solution::load(input).unwrap();
-        let p1 = Day{{ day_value }}Solution::part1(&mut input).unwrap();
-        let p2 = Day{{ day_value }}Solution::part2(&mut input, p1).unwrap();
 
+        let p1 = Day{{ day_value }}Solution::part1(&mut input).unwrap();
         assert_eq!(expected_1, p1);
+
+        let p2 = Day{{ day_value }}Solution::part2(&mut input, p1).unwrap();
         assert_eq!(expected_2, p2);
     }
 }
