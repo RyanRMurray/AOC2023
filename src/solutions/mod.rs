@@ -8,12 +8,13 @@ mod day07;
 mod day08;
 mod day09;
 mod day10;
+mod day11;
 pub mod templates;
 
 use anyhow::Result;
 
 /// Add new solutions to this const
-pub const SOLUTIONS: [fn(&str) -> Result<f32>; 10] = [
+pub const SOLUTIONS: [fn(&str) -> Result<f32>; 11] = [
     day01::day01,
     day02::day02,
     day03::day03,
@@ -24,4 +25,5 @@ pub const SOLUTIONS: [fn(&str) -> Result<f32>; 10] = [
     day08::day08,
     day09::day09,
     day10::day10,
+    day11::day11,
 ];
