@@ -1,10 +1,15 @@
-use std::fmt::Debug;
+use std::{collections::HashMap, fmt::Debug};
 
 use crate::utils::solver_types::{solve_linear, SolutionLinear};
 use anyhow::Result;
 use itertools::{repeat_n, Itertools};
 
-// TODO
+// very messy dynamic approach - essentially, recur from 0 to end of a gear list:
+// if we've fit the pattern, return 1
+// if we cannot finish the pattern, return 0
+// if we hit a #, make sure it and subsequent #'s fits the pattern else return 0
+// when we hit a ?, recur down two branches: one for the ? being a #, one for the ? being a .
+// we only memoize interesting paths (branching), but this brings the runtime down from possibly hours to 31ms on a real input!
 pub struct Day12Solution {}
 
 pub fn day12(input: &str) -> Result<f32> {
@@ -32,42 +37,80 @@ impl Debug for Gear {
     }
 }
 
-fn to_nums(gears: &[Gear]) -> Vec<usize> {
-    gears
-        .iter()
-        .group_by(|g| **g)
-        .into_iter()
-        .filter_map(|(ty, gr)| match ty {
-            Gear::Broken => Some(gr.count()),
-            _ => None,
-        })
-        .collect_vec()
+// check if a run of broken can fit starting from `start`
+fn fits_run(gears: &[Gear], start: usize, run: usize) -> bool {
+    for off in 0..run {
+        if gears[start + off] == Gear::Operational {
+            return false;
+        }
+    }
+
+    if start + run >= gears.len() {
+        return true;
+    }
+    gears[start + run] != Gear::Broken
 }
 
-fn generate_possible_vecs(gears: &Vec<Gear>, broken: usize) -> Vec<Vec<Gear>> {
-    let unknowns = gears.iter().filter(|g| **g == Gear::Unknown).count();
-    let recorded_broken = gears.iter().filter(|g| **g == Gear::Broken).count();
-    println!("{:?} - {:?} - {:?}", gears, broken, recorded_broken);
+fn recursive_solve(
+    gears: &[Gear],
+    memo: &mut HashMap<(usize, Vec<usize>), usize>,
+    idx: usize,
+    remaining_runs: Vec<usize>,
+) -> usize {
+    if let Some(v) = memo.get(&(idx, remaining_runs.clone())) {
+        return *v;
+    }
 
-    repeat_n([Gear::Broken, Gear::Operational], unknowns)
-        .multi_cartesian_product()
-        .filter_map(|mut replacements| {
-            if replacements.iter().filter(|r| **r == Gear::Broken).count() != broken - recorded_broken
-            {
-                None
+    // if we're out of gears but have runs remaining, fail
+    if idx >= gears.len() {
+        if remaining_runs.is_empty() {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    if remaining_runs.is_empty() {
+        // if we're out of runs, check if there's any gears left
+        if gears[idx] == Gear::Broken {
+            return 0;
+        }
+        return recursive_solve(gears, memo, idx + 1, remaining_runs);
+    }
+
+    if remaining_runs.iter().sum::<usize>() > gears.len() - idx {
+        // if we dont have enough gears to satisfy the runs
+        return 0;
+    }
+
+    // if we have runs,
+    match gears[idx] {
+        Gear::Operational => recursive_solve(gears, memo, idx + 1, remaining_runs), // just continue
+        Gear::Broken => {
+            // if we can fit the next run here, continue. otherwise, fail
+            let (run, runs) = remaining_runs.split_first().unwrap();
+            if fits_run(gears, idx, *run) {
+                recursive_solve(gears, memo, idx + run + 1, runs.to_vec())
             } else {
-                Some(
-                    gears
-                        .iter()
-                        .map(|g| match g {
-                            Gear::Unknown => replacements.pop().unwrap(),
-                            other => *other,
-                        })
-                        .collect_vec(),
-                )
+                0
             }
-        })
-        .collect_vec()
+        }
+        Gear::Unknown => {
+            // branch - either resolve to `.` or start new run
+            // if we can fit the next run here, continue. otherwise, fail
+            let (run, runs) = remaining_runs.split_first().unwrap();
+            let is_hash = if fits_run(gears, idx, *run) {
+                recursive_solve(gears, memo, idx + run + 1, runs.to_vec())
+            } else {
+                0
+            };
+
+            let res = is_hash + recursive_solve(gears, memo, idx + 1, remaining_runs.clone());
+
+            memo.insert((idx, remaining_runs), res);
+            res
+        }
+    }
 }
 
 impl SolutionLinear<Vec<(Vec<Gear>, Vec<usize>)>, usize, usize> for Day12Solution {
@@ -95,11 +138,8 @@ impl SolutionLinear<Vec<(Vec<Gear>, Vec<usize>)>, usize, usize> for Day12Solutio
         Ok(input
             .iter()
             .map(|(gears, nums)| {
-                let broken = nums.iter().sum();
-                generate_possible_vecs(gears, broken)
-                    .iter()
-                    .filter(|gs| to_nums(gs) == *nums)
-                    .count()
+                let mut memo = HashMap::new();
+                recursive_solve(gears, &mut memo, 0, nums.to_vec())
             })
             .sum())
     }
@@ -108,19 +148,15 @@ impl SolutionLinear<Vec<(Vec<Gear>, Vec<usize>)>, usize, usize> for Day12Solutio
         Ok(input
             .iter()
             .map(|(gears, nums)| {
+                let mut memo = HashMap::new();
                 #[allow(unstable_name_collisions)]
                 let unfolded_gears = repeat_n(gears, 5)
                     .intersperse(&vec![Gear::Unknown])
                     .flatten()
-                    .map(|v| *v)
+                    .copied()
                     .collect_vec();
                 let unfolded_nums = nums.repeat(5);
-                let broken = unfolded_nums.iter().sum();
-
-                generate_possible_vecs(&unfolded_gears, broken)
-                    .iter()
-                    .filter(|gs| to_nums(gs) == *unfolded_nums)
-                    .count()
+                recursive_solve(&unfolded_gears, &mut memo, 0, unfolded_nums)
             })
             .sum())
     }
