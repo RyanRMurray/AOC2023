@@ -215,3 +215,22 @@ mod tests {
         assert_eq!(expected, a * b)
     }
 }
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum D {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl D {
+    pub fn val(&self) -> Pt<2> {
+        match self {
+            D::Up => Pt([0, -1]),
+            D::Down => Pt([0, 1]),
+            D::Left => Pt([-1, 0]),
+            D::Right => Pt([1, 0]),
+        }
+    }
+}
