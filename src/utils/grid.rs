@@ -1,7 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fmt::Debug;
 use std::vec::IntoIter;
 
+use indexmap::IndexMap;
 use itertools::Itertools;
 
 use super::point::Pt;
@@ -14,7 +15,7 @@ pub struct Grid<T: Copy, const DIMS: usize> {
     /// cardinal offsets for points in this N dimensions
     pub card_offsets: HashSet<Pt<DIMS>>,
     default_val: T,
-    pub grid: HashMap<Pt<DIMS>, T>,
+    pub grid: IndexMap<Pt<DIMS>, T>,
 }
 
 impl<T: Default + Copy, const DIMS: usize> Default for Grid<T, DIMS> {
@@ -75,7 +76,7 @@ impl<T: Copy, const DIMS: usize> Grid<T, DIMS> {
 
     /// apply a transformation to every point in a grid
     pub fn transform(mut self, transformation: fn(Pt<DIMS>) -> Pt<DIMS>) -> Self {
-        let mut new_grid = HashMap::default();
+        let mut new_grid = IndexMap::default();
         self.grid.into_iter().for_each(|(k, v)| {
             new_grid.insert(transformation(k), v);
         });
