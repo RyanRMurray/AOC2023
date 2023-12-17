@@ -28,7 +28,7 @@ impl SolutionLinear<IndexMap<(Pt<2>, Pt<2>), usize>, usize, usize> for Day17Solu
                 adjs.iter().filter_map(|d| {
                     let next = *pt + *d;
                     if g.grid.contains_key(&next) {
-                        Some(((pt.clone(), next), *g.grid.get(&next).unwrap()))
+                        Some(((*pt, next), *g.grid.get(&next).unwrap()))
                     } else {
                         None
                     }
@@ -43,42 +43,52 @@ impl SolutionLinear<IndexMap<(Pt<2>, Pt<2>), usize>, usize, usize> for Day17Solu
         // (heat, coord, steps in a direction) - points to explore
         let mut ptrs = VecDeque::from([(0, (Pt([-1, 0]), Pt([0, 0])), [0, 0, 0, 0])]);
         // points we've expanded from
-        let mut visited: HashMap<(Pt<2>, Pt<2>), usize> = HashMap::new();
+        let mut visited: HashMap<(Pt<2>, Pt<2>, [usize; 4]), usize> = HashMap::new();
+        let mut max = 1000; // this is a bodge, deal with it
 
         while let Some(pt) = ptrs.pop_front() {
-            visited.insert(pt.1, pt.0);
-            println!("Visited: {:?}", visited.len());
-            // if pt.1 .1 == target {
-            //     result = pt.0;
-            //     break;
-            // }
+            if visited
+                .get(&(pt.1 .0, pt.1 .1, pt.2))
+                .is_some_and(|v| v < &pt.0)
+            {
+                continue;
+            }
+            visited.insert((pt.1 .0, pt.1 .1, pt.2), pt.0);
+            if pt.0 > max {
+                continue;
+            }
+            if pt.1 .1 == target {
+                max = max.max(pt.0);
+            }
+
             let ns = (0..4).filter_map(|i| {
                 let neighbour = pt.1 .1 + dirs[i];
-                if input.contains_key(&(pt.1 .1, neighbour)) && pt.2[i] < 3 {
+                if input.contains_key(&(pt.1 .1, neighbour)) && pt.2[i] < 3 && neighbour != pt.1 .0
+                {
                     let dist = pt.0 + input.get(&(pt.1 .1, neighbour)).unwrap();
+                    let steps = (0..4)
+                        .map(|j| if j == i { pt.2[i] + 1 } else { 0 })
+                        .collect_vec()
+                        .try_into()
+                        .unwrap();
                     if visited
-                        .get(&(pt.1 .1, neighbour))
-                        .is_some_and(|v| v <= &dist)
+                        .get(&(pt.1 .1, neighbour, pt.2))
+                        .is_some_and(|v| v < &dist)
                     {
                         None
                     } else {
-                        Some((
-                            dist,
-                            (pt.1 .1, neighbour),
-                            (0..4)
-                                .map(|j| if j == i { pt.2[i] + 1 } else { 0 })
-                                .collect_vec()
-                                .try_into()
-                                .unwrap(),
-                        ))
+                        Some((dist, (pt.1 .1, neighbour), steps))
                     }
                 } else {
                     None
                 }
             });
             for n in ns {
-                // overwrite to-visit if this would be closer
-                if let Some(i) = ptrs.iter().position(|(_, pt, _)| *pt == n.1) {
+                //overwrite to-visit if this would be closer
+                if let Some(i) = ptrs
+                    .iter()
+                    .position(|(_, pt, sts)| pt == &n.1 && sts == &n.2)
+                {
                     if ptrs[i].0 > n.0 {
                         ptrs[i] = n;
                     }
@@ -92,9 +102,16 @@ impl SolutionLinear<IndexMap<(Pt<2>, Pt<2>), usize>, usize, usize> for Day17Solu
             }
         }
 
+        println!(
+            "{:?}",
+            visited
+                .iter()
+                .filter(|((_, end, _), _)| end == &target)
+                .collect_vec()
+        );
         Ok(*visited
             .iter()
-            .filter(|((_, end), _)| end == &target)
+            .filter(|((_, end, _), _)| end == &target)
             .map(|(_, v)| v)
             .min()
             .unwrap())
