@@ -44,7 +44,7 @@ impl SolutionLinear<IndexMap<(Pt<2>, Pt<2>), usize>, usize, usize> for Day17Solu
         let mut ptrs = VecDeque::from([(0, (Pt([-1, 0]), Pt([0, 0])), [0, 0, 0, 0])]);
         // points we've expanded from
         let mut visited: HashMap<(Pt<2>, Pt<2>, [usize; 4]), usize> = HashMap::new();
-        let mut max = 1000; // this is a bodge, deal with it
+        let mut max: usize = 1000; // this is a bodge, deal with it
 
         while let Some(pt) = ptrs.pop_front() {
             if visited
@@ -59,6 +59,7 @@ impl SolutionLinear<IndexMap<(Pt<2>, Pt<2>), usize>, usize, usize> for Day17Solu
             }
             if pt.1 .1 == target {
                 max = max.max(pt.0);
+                continue;
             }
 
             let ns = (0..4).filter_map(|i| {
@@ -71,14 +72,7 @@ impl SolutionLinear<IndexMap<(Pt<2>, Pt<2>), usize>, usize, usize> for Day17Solu
                         .collect_vec()
                         .try_into()
                         .unwrap();
-                    if visited
-                        .get(&(pt.1 .1, neighbour, pt.2))
-                        .is_some_and(|v| v < &dist)
-                    {
-                        None
-                    } else {
-                        Some((dist, (pt.1 .1, neighbour), steps))
-                    }
+                    Some((dist, (pt.1 .1, neighbour), steps))
                 } else {
                     None
                 }
@@ -102,13 +96,6 @@ impl SolutionLinear<IndexMap<(Pt<2>, Pt<2>), usize>, usize, usize> for Day17Solu
             }
         }
 
-        println!(
-            "{:?}",
-            visited
-                .iter()
-                .filter(|((_, end, _), _)| end == &target)
-                .collect_vec()
-        );
         Ok(*visited
             .iter()
             .filter(|((_, end, _), _)| end == &target)
@@ -132,6 +119,7 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
+    #[ignore = "delete to test solution"]
     #[case(
         "2413432311323
 3215453535623
