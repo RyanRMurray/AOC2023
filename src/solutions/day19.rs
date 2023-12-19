@@ -90,9 +90,9 @@ fn sum_items(ranges: Ranges) -> usize {
 fn enumerate(instrs: &HashMap<String, Vec<Instr>>, i: String, idx: usize, ranges: Ranges) -> usize {
     match instrs.get(&i).unwrap().get(idx).unwrap() {
         Instr::Just(a) => match a {
-            Action::To(new_i) => enumerate(instrs, new_i.to_string(), 0, ranges),
             Action::Reject => 0,
             Action::Accept => sum_items(ranges),
+            Action::To(new_i) => enumerate(instrs, new_i.to_string(), 0, ranges),
         },
         // we can always assume a cmp is not a terminator
         Instr::Cmp(c_idx, ord, val, a) => {
