@@ -5,17 +5,20 @@ Advent of Code is an event run by Eric Wastl. For each day leading up to Christm
 
 ## Using this project
 
+### Requirements
+ - libopenblas-dev
+
 You can run this project by calling
 
 ```bash
-cargo build
+cargo +nightly build
 ./target/debug/AOC2023.exe -d [day number]  -i [input file path]
 ```
 
 or
 
 ```bash
-cargo run -- -d [day number] -i [input file path]
+cargo +nightly run -- -d [day number] -i [input file path]
 ```
 
 To create a new solution file for a particular day, run `./start_day [day number]`
